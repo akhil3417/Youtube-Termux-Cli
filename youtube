@@ -1,0 +1,78 @@
+#!/bin/sh
+figlet -w 100 "Youtube CLI"
+echo "developed by : @fedora32\n"
+snglnk(){
+query=$(printf '%s' "$*" | tr ' ' '+' )
+video=$(curl -s "https://vid.puffyan.us/search?q=$query" | grep -Eo "watch\?v=.{11}" | head -n 1)
+
+echo $video
+}
+REQUIRED(){
+echo "installing required package..."
+echo "updating packages..."
+pkg up >/dev/null 2>&1
+echo "installing python ..."
+pkg i python >/dev/null 2>&1
+echo "installing youtube-dl ..."
+pip install youtube-dl >/dev/null 2>&1
+pkg install figlet >/dev/null 2>&1
+cd $HOME
+mkdir -p bin .config/youtube-dl/
+echo -f "dash-VIDEO-1+bestaudio/dash-VIDEO-1/best/mp4+m4a -o /storage/emulated/0/YoutubeDownloads/%(title)s.%(ext)s" >>.config/youtube-dl/config
+if [ ! $(command -v youtube-dl) ];then
+echo "FAILED!!"
+exit 0
+else
+echo " All the depedencies are successfully installed\n"
+fi
+}
+
+while true;do
+echo "1. Youtube Online\n"
+echo "2. Youtube downloader\n"
+echo "3. Install Dependencies (use first time)\n"
+figlet -w 100 "Choice"
+echo -n "Alright Enter Your choice :"
+read -r OPT
+figlet -w 100 "Search"
+case $OPT in
+ '3')
+   REQUIRED
+ ;;
+ '2')
+   echo -n "type your video :"
+   read -r STR
+   figlet -w 100 "Downloading"
+   echo " $query will be downloaded in YoutubeVideos directory in your storage..."
+   query=$(printf '%s' "$STR" | tr ' ' '+' )
+   video=$(curl -s "https://vid.puffyan.us/search?q=$query" | grep -Eo "watch\?v=.{11}" | head -n 1)
+   lnk=$(echo $video | cut -d '/' -f3)
+   if [ "$lnk" != "" ];then
+   # echo "$lnk"
+    youtube-dl "https://youtube.com/$video"
+ 
+   else
+    echo "video not found"
+    exit 0
+   fi
+ ;;
+ '1')
+   echo -n "type your video :"
+   read -r STR 
+   figlet -w 100 "Streaming"
+   echo "Streaming $query ..."
+   echo "Controls  : 0(vol+) 9(vol-) Speed (Backpace)\n Use arrow keys for seeking video Forward or backward"
+   query=$(printf '%s' "$STR" | tr ' ' '+' )
+   video=$(curl -s "https://vid.puffyan.us/search?q=$query" | grep -Eo "watch\?v=.{11}" | head -n 1)
+   lnk=$(echo $video | cut -d '/' -f3)
+   if [ "$lnk" != "" ];then
+   # echo "$lnk"
+    mpv "https://youtube.com/$lnk"
+    
+   else
+    echo "video not found"
+    exit 0
+   fi 
+ ;;
+esac
+done
